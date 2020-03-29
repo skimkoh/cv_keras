@@ -235,7 +235,7 @@ for idx, img_name in enumerate(sorted(os.listdir(img_path))):
 
 		all_dets = []
 		
-		# count = 0
+		count = 0
 
 		for key in bboxes:
 				
@@ -243,7 +243,7 @@ for idx, img_name in enumerate(sorted(os.listdir(img_path))):
 
 			new_boxes, new_probs = roi_helpers.non_max_suppression_fast(bbox, np.array(probs[key]), overlap_thresh=0.5)
 			for jk in range(new_boxes.shape[0]):
-					# if count == 0:
+					if count == 0:
 						(x1, y1, x2, y2) = new_boxes[jk,:]
 						(real_x1, real_y1, real_x2, real_y2) = get_real_coordinates(ratio, x1, y1, x2, y2)
 
@@ -258,7 +258,7 @@ for idx, img_name in enumerate(sorted(os.listdir(img_path))):
 						cv2.rectangle(img, (textOrg[0] - 5, textOrg[1]+baseLine - 5), (textOrg[0]+retval[0] + 5, textOrg[1]-retval[1] - 5), (0, 0, 0), 2)
 						cv2.rectangle(img, (textOrg[0] - 5,textOrg[1]+baseLine - 5), (textOrg[0]+retval[0] + 5, textOrg[1]-retval[1] - 5), (255, 255, 255), -1)
 						cv2.putText(img, textLabel, textOrg, cv2.FONT_HERSHEY_DUPLEX, 1, (0, 0, 0), 1)
-						# count += 1
+						count += 1
 				
 
 	print('Elapsed time = {}'.format(time.time() - st))
@@ -267,14 +267,14 @@ for idx, img_name in enumerate(sorted(os.listdir(img_path))):
 	# cv2.waitKey(0)
 	# print('idx: {}'.format())
 	# cv2.imwrite('/Users/kohseukim/cv_project/results_test2/{}.png'.format(idx),img)
-	cv2.imwrite('/content/results/{}.png'.format(idx), img)
 	if len(all_dets):
-		pred_class  = (all_dets[0])[0]   # predicted class
+		pred_class = (all_dets[0])[0]   # predicted class
 		pred.append(pred_class)
-		label.append(gold_label)   # gold truth class
+		label.append(gold_label)   # gd truth class
+		cv2.imwrite('/content/results/{}.png'.format(idx), img)
 	else:
 			# pred.append('bg')
-			# label.append(gold_label)   # gold truth class
+			# label.append(gold_label)   # gd truth class
 			miss_wrong_pred += 1
 	
 	
@@ -283,7 +283,6 @@ class_label = ['apple','banana','bread','bun','doughnut','egg','fired_dough_twis
                'plum', 'qiwi','sachima','tomato']
 
 # class_label = ['apple', 'banana', 'bread', 'doughnut', 'fired_dough_twist', 'litchi', 'peach', 'tomato', 'mango']
-print('no. of missed label')
 print(miss_wrong_pred)
 print('classification report')
 print(classification_report(label, pred, target_names=class_label))
@@ -291,12 +290,5 @@ print('confusion matrix output')
 array = confusion_matrix(label, pred)
 df_cm = pd.DataFrame(array, index = [i for i in class_label], 
         columns = [i for i in class_label]) 				
-# plt.figure(figsize = (40,40)) 
-# sn.set(font_scale=200) #for label size 
 sn.heatmap(df_cm, annot=True, annot_kws={"size": 12})   
 plt.savefig("/content/matrix.png")
-
-# sn.set(font_scale=1.4) # for label size
-# sn.heatmap(df_cm, annot=True, annot_kws={"size": 16}) # font size
-# plt.show()
-# plt.savefig("/content/matrix.png")
