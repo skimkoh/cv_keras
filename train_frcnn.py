@@ -25,10 +25,10 @@ parser.add_option("-o", "--parser", dest="parser", help="Parser to use. One of s
 				default="pascal_voc")
 parser.add_option("-n", "--num_rois", type="int", dest="num_rois", help="Number of RoIs to process at once.", default=32)
 parser.add_option("--network", dest="network", help="Base network to use. Supports vgg or resnet50.", default='resnet50')
-parser.add_option("--hf", dest="horizontal_flips", help="Augment with horizontal flips in training. (Default=false).", action="store_true", default=False)
-parser.add_option("--vf", dest="vertical_flips", help="Augment with vertical flips in training. (Default=false).", action="store_true", default=False)
+parser.add_option("--hf", dest="horizontal_flips", help="Augment with horizontal flips in training. (Default=false).", action="store_true", default=True)
+parser.add_option("--vf", dest="vertical_flips", help="Augment with vertical flips in training. (Default=false).", action="store_true", default=True)
 parser.add_option("--rot", "--rot_90", dest="rot_90", help="Augment with 90 degree rotations in training. (Default=false).",
-				  action="store_true", default=False)
+				  action="store_true", default=True)
 parser.add_option("--num_epochs", type="int", dest="num_epochs", help="Number of epochs.", default=100)
 parser.add_option("--config_filename", dest="config_filename", help=
 				"Location to store all the metadata related to the training (to be used when testing).",
@@ -148,7 +148,7 @@ model_classifier.compile(optimizer=optimizer_classifier, loss=[losses.class_loss
 model_all.compile(optimizer='sgd', loss='mae')
 
 # change length here
-epoch_length = 300
+epoch_length = 500
 num_epochs = int(options.num_epochs)
 iter_num = 0
 

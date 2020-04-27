@@ -16,6 +16,7 @@ from sklearn.metrics import classification_report
 import pandas as pd
 import seaborn as sn 
 import matplotlib.pyplot as plt 
+import collections
 
 sys.setrecursionlimit(40000)
 
@@ -154,6 +155,12 @@ visualise = True
 
 # test_numbers = 0
 miss_wrong_pred = 0
+multi_pred = 0
+no_detection_images = []
+no_detection_labels = []
+multi_pred_images = []
+multi_pred_labels = []
+
 # missed_count = {}
 
 pred = []
@@ -235,7 +242,6 @@ for idx, img_name in enumerate(sorted(os.listdir(img_path))):
 
 		all_dets = []
 		
-		count = 0
 
 		for key in bboxes:
 				
@@ -243,7 +249,6 @@ for idx, img_name in enumerate(sorted(os.listdir(img_path))):
 
 			new_boxes, new_probs = roi_helpers.non_max_suppression_fast(bbox, np.array(probs[key]), overlap_thresh=0.5)
 			for jk in range(new_boxes.shape[0]):
-					if count == 0:
 						(x1, y1, x2, y2) = new_boxes[jk,:]
 						(real_x1, real_y1, real_x2, real_y2) = get_real_coordinates(ratio, x1, y1, x2, y2)
 
@@ -258,7 +263,6 @@ for idx, img_name in enumerate(sorted(os.listdir(img_path))):
 						cv2.rectangle(img, (textOrg[0] - 5, textOrg[1]+baseLine - 5), (textOrg[0]+retval[0] + 5, textOrg[1]-retval[1] - 5), (0, 0, 0), 2)
 						cv2.rectangle(img, (textOrg[0] - 5,textOrg[1]+baseLine - 5), (textOrg[0]+retval[0] + 5, textOrg[1]-retval[1] - 5), (255, 255, 255), -1)
 						cv2.putText(img, textLabel, textOrg, cv2.FONT_HERSHEY_DUPLEX, 1, (0, 0, 0), 1)
-						count += 1
 				
 
 	print('Elapsed time = {}'.format(time.time() - st))
@@ -267,28 +271,57 @@ for idx, img_name in enumerate(sorted(os.listdir(img_path))):
 	# cv2.waitKey(0)
 	# print('idx: {}'.format())
 	# cv2.imwrite('/Users/kohseukim/cv_project/results_test2/{}.png'.format(idx),img)
-	if len(all_dets):
-		pred_class = (all_dets[0])[0]   # predicted class
+	cv2.imwrite('/content/results/{}.png'.format(img_name), img)
+	if len(all_dets) == 1:
+		pred_class  = (all_dets[0])[0]   # predicted class
+		print('pred_class: {}'.format(pred_class))
 		pred.append(pred_class)
-		label.append(gold_label)   # gd truth class
-		cv2.imwrite('/content/results/{}.png'.format(idx), img)
+		label.append(gold_label)   # gold truth class
+	
+	elif len(all_dets) > 1:
+    			# pred.append('bg')
+			# label.append(gold_label)   # gold truth class
+			multi_pred += 1			
+			multi_pred_images.append(img_name)
+			multi_pred_labels.append(gold_label)
+	
 	else:
 			# pred.append('bg')
-			# label.append(gold_label)   # gd truth class
+			# label.append(gold_label)   # gold truth class
 			miss_wrong_pred += 1
+			no_detection_images.append(img_name)
+			no_detection_labels.append(gold_label)
 	
 	
 class_label = ['apple','banana','bread','bun','doughnut','egg','fired_dough_twist',
                'grape','lemon','litchi','mango','mooncake','orange','peach','pear',
                'plum', 'qiwi','sachima','tomato']
 
-# class_label = ['apple', 'banana', 'bread', 'doughnut', 'fired_dough_twist', 'litchi', 'peach', 'tomato', 'mango']
-print(miss_wrong_pred)
-print('classification report')
-print(classification_report(label, pred, target_names=class_label))
+
+# for missed 
+print('no. of missed label (no detections): {}'.format(miss_wrong_pred))
+print('name of missed detections images: {}'.format(no_detection_images))
+miss_detections_freq = collections.Counter(no_detection_labels)
+
+# for multi
+print('no. of multi labels: {}'.format(multi_pred))
+print('name of multi-labelled images: {}'.format(multi_pred_images))
+multi_pred_freq = collections.Counter(multi_pred_labels)
+
+print(miss_detections_freq)
+print(multi_pred_freq)
+
+
 print('confusion matrix output')
 array = confusion_matrix(label, pred)
 df_cm = pd.DataFrame(array, index = [i for i in class_label], 
         columns = [i for i in class_label]) 				
+# plt.figure(figsize = (40,40)) 
+# sn.set(font_scale=200) #for label size 
 sn.heatmap(df_cm, annot=True, annot_kws={"size": 12})   
 plt.savefig("/content/matrix.png")
+
+# sn.set(font_scale=1.4) # for label size
+# sn.heatmap(df_cm, annot=True, annot_kws={"size": 16}) # font size
+# plt.show()
+# plt.savefig("/content/matrix.png")
